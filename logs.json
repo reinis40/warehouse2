@@ -1,0 +1,13 @@
+[
+    {
+        "action": "update",
+        "item": {
+            "id": "f798a76b-1291-4eb3-bcf4-76c403070d31",
+            "name": "Smartphone",
+            "quantity": 950,
+            "price": 499.99
+        },
+        "username": "admin",
+        "timestamp": "2024-06-07 03:59:35"
+    }
+]
