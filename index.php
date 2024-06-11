@@ -9,25 +9,29 @@ require_once 'User.php';
 $usersFile = 'users.json';
 $itemsFile = 'items.json';
 $logsFile = 'logs.json';
-$users = json_decode(file_get_contents($usersFile), true);
+
 $warehouse = new Warehouse($itemsFile, $logsFile);
 
+session_start();
+
 echo "Enter your name: ";
-$name = (readline());
+$name = readline();
 echo "Enter your password: ";
-$password = (readline());
-if (!login($name, $password)) {
+$password = readline();
+if (!login($name, $password, $usersFile)) {
     echo "Invalid login. Exiting...\n";
     exit;
 }
+
 while (true) {
     showMenu($warehouse);
     $option = readline();
-    input($option, $warehouse);
+    handleInput($option, $warehouse, $logsFile);
 }
-function login($name, $password): bool
+
+function login($name, $password, $usersFile): bool
 {
-    global $users;
+    $users = json_decode(file_get_contents($usersFile), true);
     foreach ($users as $userData) {
         if ($userData['name'] == $name && $userData['password'] == $password) {
             $_SESSION['user'] = $name;
@@ -49,50 +53,48 @@ function showMenu($warehouse)
     $items = $warehouse->getItems();
     $output = new ConsoleOutput();
     $table = new Table($output);
-    $table->setHeaders(['Nr','Name', 'Quantity', 'Price','UUID']);
-    foreach ($items as $key => $item)
-    {
+    $table->setHeaders(['Nr','Name', 'Quantity', 'Price', 'UUID', 'Expiration Date']);
+    foreach ($items as $key => $item) {
         $table->addRow([
               $key + 1,
               $item->name,
               $item->quantity,
               $item->price . "$",
-              $item->uuid
+              $item->uuid,
         ]);
     }
     $table->render();
     echo "Choose an option: ";
 }
 
-function input($option, $warehouse) {
+function handleInput($option, $warehouse, $logsFile) {
     switch ($option) {
         case 1:
-            echo "Enter item number: ";
-            $itemNumber = (readline());
-            $item = $warehouse->getItems()[$itemNumber - 1] ?? null;
-            if ($item) {
-                echo "Enter item quantity: ";
-                $quantity = intval(readline());
-                $item->quantity += $quantity;
-                $warehouse->updateItem($item->uuid, $item->name, $item->quantity, $item->price, $_SESSION['user']);
-                echo "Item quantity updated.\n";
-            } else {
-                echo "Invalid item number.\n";
-            }
+            echo "Enter item quantity: ";
+            $quantity = intval(readline());
+            echo "Enter item price: ";
+            $price = floatval(readline());
+            echo "Enter item expiration date (YYYY-MM-DD): ";
+            $expiration_date = readline();
+            $item = new Item($name, $quantity, $price, $expiration_date);
+            $warehouse->addItem($item, $_SESSION['user'], $logsFile);
+            echo "Item added.\n";
             break;
 
         case 2:
             echo "Enter item number: ";
-            $itemNumber = (readline());
+            $itemNumber = intval(readline());
             $item = $warehouse->getItems()[$itemNumber - 1] ?? null;
             if ($item) {
                 echo "Enter new item name: ";
-                $name = (readline());
+                $name = readline();
                 echo "Enter new item quantity: ";
-                $quantity = (readline());
+                $quantity = intval(readline());
                 echo "Enter new item price: ";
                 $price = floatval(readline());
-                $warehouse->updateItem($item->uuid, $name, $quantity, $price, $_SESSION['user']);
+                echo "Enter new item expiration date (YYYY-MM-DD): ";
+                $expiration_date = readline();
+                $warehouse->updateItem($item->uuid, $name, $quantity, $price, $expiration_date, $_SESSION['user'], $logsFile);
                 echo "Item updated.\n";
             } else {
                 echo "Invalid item number.\n";
@@ -104,7 +106,7 @@ function input($option, $warehouse) {
             $itemNumber = intval(readline());
             $item = $warehouse->getItems()[$itemNumber - 1] ?? null;
             if ($item) {
-                $warehouse->deleteItem($item->uuid, $_SESSION['user']);
+                $warehouse->deleteItem($item->uuid, $_SESSION['user'], $logsFile);
                 echo "Item deleted.\n";
             } else {
                 echo "Invalid item number.\n";
@@ -112,6 +114,11 @@ function input($option, $warehouse) {
             break;
 
         case 4:
+            $logs = json_decode(file_get_contents($logsFile), true);
+            foreach ($logs as $log) {
+                echo "Action: {$log['action']}, Item: {$log['item']['name']}, User: {$log['username']}, Timestamp: {$log['timestamp']}\n";
+            }
+            break;
 
         case 5:
             $totals = $warehouse->getTotalItemsAndCost();
@@ -127,7 +134,3 @@ function input($option, $warehouse) {
             break;
     }
 }
-
-
-
-
