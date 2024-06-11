@@ -53,14 +53,14 @@ function showMenu($warehouse)
     $items = $warehouse->getItems();
     $output = new ConsoleOutput();
     $table = new Table($output);
-    $table->setHeaders(['Nr','Name', 'Quantity', 'Price', 'UUID', 'Expiration Date']);
+    $table->setHeaders(['Nr', 'Name', 'Quantity', 'Price', 'UUID']);
     foreach ($items as $key => $item) {
         $table->addRow([
-              $key + 1,
-              $item->name,
-              $item->quantity,
-              $item->price . "$",
-              $item->uuid,
+            $key + 1,
+            $item->name,
+            $item->quantity,
+            $item->price . "$",
+            $item->uuid,
         ]);
     }
     $table->render();
@@ -70,14 +70,14 @@ function showMenu($warehouse)
 function handleInput($option, $warehouse, $logsFile) {
     switch ($option) {
         case 1:
+            echo "Enter item name: ";
+            $name = readline();
             echo "Enter item quantity: ";
             $quantity = intval(readline());
             echo "Enter item price: ";
             $price = floatval(readline());
-            echo "Enter item expiration date (YYYY-MM-DD): ";
-            $expiration_date = readline();
-            $item = new Item($name, $quantity, $price, $expiration_date);
-            $warehouse->addItem($item, $_SESSION['user'], $logsFile);
+            $item = new Item($name, $quantity, $price);
+            $warehouse->addItem($item, $_SESSION['user']);
             echo "Item added.\n";
             break;
 
@@ -92,9 +92,7 @@ function handleInput($option, $warehouse, $logsFile) {
                 $quantity = intval(readline());
                 echo "Enter new item price: ";
                 $price = floatval(readline());
-                echo "Enter new item expiration date (YYYY-MM-DD): ";
-                $expiration_date = readline();
-                $warehouse->updateItem($item->uuid, $name, $quantity, $price, $expiration_date, $_SESSION['user'], $logsFile);
+                $warehouse->updateItem($item->uuid, $name, $quantity, $price, $_SESSION['user']);
                 echo "Item updated.\n";
             } else {
                 echo "Invalid item number.\n";
@@ -106,7 +104,7 @@ function handleInput($option, $warehouse, $logsFile) {
             $itemNumber = intval(readline());
             $item = $warehouse->getItems()[$itemNumber - 1] ?? null;
             if ($item) {
-                $warehouse->deleteItem($item->uuid, $_SESSION['user'], $logsFile);
+                $warehouse->deleteItem($item->uuid, $_SESSION['user']);
                 echo "Item deleted.\n";
             } else {
                 echo "Invalid item number.\n";
