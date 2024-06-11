@@ -112,11 +112,6 @@ function input($option, $warehouse) {
             break;
 
         case 4:
-            $logs = $warehouse->getLogs();
-            foreach ($logs as $log) {
-                echo "Action: {$log['action']}, Item: {$log['item']['name']}, User: {$log['username']}, Timestamp: {$log['timestamp']}\n";
-            }
-            break;
 
         case 5:
             $totals = $warehouse->getTotalItemsAndCost();
